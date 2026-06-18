@@ -10,9 +10,10 @@ interface Props {
   onSelect: (t: Task) => void;
   onComplete: (id: string) => void;
   onRefresh: () => void;
+  onDemo?: () => void;
 }
 
-export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onRefresh }: Props) {
+export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onRefresh, onDemo }: Props) {
   const { t } = useI18n();
   const [filter, setFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [search, setSearch] = useState('');
@@ -125,9 +126,14 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
     <div className="tl-container">
       <div className="tl-header">
         <span className="tl-header-title">{t.taskList.title}</span>
-        <button className="tl-btn-refresh" onClick={onRefresh} title={t.taskList.refresh}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L1 10"/></svg>
-        </button>
+        <div className="tl-header-actions">
+          {onDemo && activeTasks.length === 0 && (
+            <button className="tl-btn-demo" onClick={onDemo}>{t.taskList.demoBtn}</button>
+          )}
+          <button className="tl-btn-refresh" onClick={onRefresh} title={t.taskList.refresh}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L1 10"/></svg>
+          </button>
+        </div>
       </div>
 
       <div className="tl-search-bar">
@@ -165,9 +171,12 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
         )}
         {filtered.length === 0 && !search && activeTasks.length === 0 && (
           <div className="tl-empty">
-            <div style={{fontSize:32, marginBottom:8}}>🎉</div>
+            <div style={{fontSize:32, marginBottom:8}}>📋</div>
             <div>{t.taskList.noTasks}</div>
             <div className="tl-empty-sub">{t.taskList.noTasksHint}</div>
+            {onDemo && (
+              <button className="tl-btn-demo tl-btn-demo-lg" onClick={onDemo}>{t.taskList.demoBtn}</button>
+            )}
           </div>
         )}
       </div>

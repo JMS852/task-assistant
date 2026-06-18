@@ -5,7 +5,7 @@ import { useApi } from './useApi';
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const { fetchTasks, updateTaskStatus } = useApi();
+  const { fetchTasks, updateTaskStatus, createDemoTasks } = useApi();
 
   const refresh = useCallback(async () => {
     try {
@@ -25,5 +25,11 @@ export function useTasks() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'completed' as const } : t));
   };
 
-  return { tasks, loading, refresh, completeTask };
+  const demo = async () => {
+    const res = await createDemoTasks();
+    await refresh();
+    return res;
+  };
+
+  return { tasks, loading, refresh, completeTask, demo };
 }

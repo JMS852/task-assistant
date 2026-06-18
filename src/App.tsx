@@ -9,7 +9,7 @@ import { useI18n, format } from './i18n';
 
 export default function App() {
   const { t } = useI18n();
-  const { tasks, loading, completeTask, refresh } = useTasks();
+  const { tasks, loading, completeTask, refresh, demo } = useTasks();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [executingTask, setExecutingTask] = useState<Task | null>(null);
@@ -47,6 +47,7 @@ export default function App() {
             onSelect={setSelectedTask}
             onComplete={completeTask}
             onRefresh={refresh}
+            onDemo={demo}
           />
         </div>
         <div className="panel-right">

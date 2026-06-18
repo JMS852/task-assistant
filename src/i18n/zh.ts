@@ -23,6 +23,8 @@ const zh = {
     noResult: '未找到 "{search}"',
     noTasks: '暂无待办任务',
     noTasksHint: '等待微信/QQ 消息采集…',
+    demoBtn: '生成演示数据',
+    demoDone: '已生成 {count} 条演示任务',
   },
 
   taskDetail: {

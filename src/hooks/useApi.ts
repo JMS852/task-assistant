@@ -21,5 +21,12 @@ export function useApi() {
   const ping = () =>
     fetch(`${API_BASE}/ping`).then(r => r.json());
 
-  return { fetchTasks, updateTaskStatus, executeTask, ping };
+  const createDemoTasks = (): Promise<{ success: boolean; count?: number; message?: string }> => {
+    if (window.electronAPI?.createDemoTasks) {
+      return window.electronAPI.createDemoTasks();
+    }
+    return fetch(`${API_BASE}/tasks/demo`, { method: 'POST' }).then(r => r.json());
+  };
+
+  return { fetchTasks, updateTaskStatus, executeTask, ping, createDemoTasks };
 }

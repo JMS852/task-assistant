@@ -25,6 +25,8 @@ const en: Translations = {
     noResult: 'No results for "{search}"',
     noTasks: 'No tasks yet',
     noTasksHint: 'Waiting for WeChat/QQ messages…',
+    demoBtn: 'Generate Demo Data',
+    demoDone: '{count} demo tasks created',
   },
 
   taskDetail: {
