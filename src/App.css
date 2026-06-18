@@ -1,15 +1,177 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; }
-.app-container { height: 100vh; display: flex; flex-direction: column; }
-.app-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 20px; background: #fff; border-bottom: 1px solid #e0e0e0;
-  -webkit-app-region: drag;
+:root {
+  --sidebar-w: 340px;
+  --header-h: 56px;
+  --accent: #4f6ef7;
+  --accent-light: #eef0ff;
+  --danger: #e5484d;
+  --warning: #f5a623;
+  --success: #30a46c;
+  --bg: #f7f7f9;
+  --surface: #ffffff;
+  --sidebar-bg: #1e1e2a;
+  --sidebar-text: #c4c4d0;
+  --sidebar-active: #2a2a3a;
+  --text: #1a1a2e;
+  --text-secondary: #6b6b80;
+  --border: #e8e8ee;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.app-header h1 { font-size: 18px; color: #1a73e8; }
-.btn-settings { padding: 6px 16px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; -webkit-app-region: no-drag; }
-.btn-settings:hover { background: #f5f5f5; }
-.app-body { display: flex; flex: 1; overflow: hidden; }
-.panel-left { width: 320px; border-right: 1px solid #e0e0e0; background: #fff; overflow-y: auto; }
-.panel-right { flex: 1; background: #fff; overflow-y: auto; padding: 20px; }
-.empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 16px; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ── Header ── */
+.app-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  z-index: 10;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), #7c5cfc);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #fff;
+}
+
+.app-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.header-badge .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.btn-icon {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  color: var(--text-secondary);
+}
+.btn-icon:hover { background: var(--bg); color: var(--text); border-color: #ccc; }
+
+/* ── Body ── */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Left Panel (Sidebar) ── */
+.panel-left {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── Right Panel (Content) ── */
+.panel-right {
+  flex: 1;
+  background: var(--bg);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #aaa;
+}
+
+.empty-state-icon {
+  width: 80px; height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e8ecff, #f0e8ff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+}
+
+.empty-state h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #888;
+}
+
+.empty-state p {
+  font-size: 13px;
+  color: #bbb;
+  text-align: center;
+  line-height: 1.5;
+}

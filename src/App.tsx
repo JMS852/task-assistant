@@ -12,6 +12,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [executingTask, setExecutingTask] = useState<Task | null>(null);
 
+  const activeCount = tasks.filter(t => t.status !== 'completed').length;
+
   if (showSettings) {
     return <Settings onBack={() => setShowSettings(false)} />;
   }
@@ -19,9 +21,21 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>待办助手</h1>
-        <button onClick={() => setShowSettings(true)} className="btn-settings">设置</button>
+        <div className="app-header-left">
+          <div className="app-logo">✦</div>
+          <span className="app-title">待办助手</span>
+        </div>
+        <div className="app-header-right">
+          {activeCount > 0 && (
+            <div className="header-badge">
+              <span className="dot" />
+              {activeCount} 个待办
+            </div>
+          )}
+          <button className="btn-icon" onClick={() => setShowSettings(true)} title="设置">⚙</button>
+        </div>
       </header>
+
       <div className="app-body">
         <div className="panel-left">
           <TaskList
@@ -43,11 +57,15 @@ export default function App() {
           ) : selectedTask ? (
             <TaskDetail
               task={selectedTask}
-              onComplete={completeTask}
+              onComplete={(id) => { completeTask(id); setSelectedTask(null); }}
               onExecute={() => setExecutingTask(selectedTask)}
             />
           ) : (
-            <div className="empty-state">选择一个任务查看详情</div>
+            <div className="empty-state">
+              <div className="empty-state-icon">📋</div>
+              <h3>选择一个任务</h3>
+              <p>从左侧列表中选择任务查看详情<br />或点击"智能执行"让 AI 帮你完成</p>
+            </div>
           )}
         </div>
       </div>
