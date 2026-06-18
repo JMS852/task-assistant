@@ -132,6 +132,28 @@
 .s-note ul { padding-left: 20px; }
 .s-note li { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.5; }
 
+/* ── Language Switcher ── */
+.s-lang-section {
+  margin-top: auto; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.s-lang-label {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.s-lang-btns { display: flex; gap: 4px; }
+.s-lang-btn {
+  flex: 1; padding: 6px 8px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text-secondary);
+  font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit;
+  transition: all var(--transition);
+}
+.s-lang-btn:hover { background: var(--bg); color: var(--text); }
+.s-lang-btn.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+
 /* ── Footer / About ── */
 .s-page-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); max-width: 680px; }
 .s-about { display: flex; align-items: center; gap: 14px; }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useI18n, format } from '../i18n';
 import './SmartExecute.css';
 
 interface Props {
@@ -8,13 +9,8 @@ interface Props {
   onClose: () => void;
 }
 
-const levels = [
-  { key: 'L1', title: '快速模式', desc: '仅主 AI · 30s 超时', icon: '⚡', color: '#30a46c' },
-  { key: 'L2', title: '标准模式', desc: '2 个参考 AI · 120s 超时', icon: '🔄', color: '#4f6ef7' },
-  { key: 'L3', title: '深度模式', desc: '3 个参考 AI + 沙箱验证 · 180s 超时', icon: '🧠', color: '#7c5cfc' },
-];
-
 export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
+  const { t } = useI18n();
   const [level, setLevel] = useState<'L1' | 'L2' | 'L3'>('L2');
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -22,12 +18,18 @@ export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
   const [progress, setProgress] = useState(0);
   const { executeTask } = useApi();
 
+  const levels = [
+    { key: 'L1', title: t.smartExecute.levelL1Name, desc: t.smartExecute.levelL1Desc, icon: '⚡', color: '#30a46c' },
+    { key: 'L2', title: t.smartExecute.levelL2Name, desc: t.smartExecute.levelL2Desc, icon: '🔄', color: '#4f6ef7' },
+    { key: 'L3', title: t.smartExecute.levelL3Name, desc: t.smartExecute.levelL3Desc, icon: '🧠', color: '#7c5cfc' },
+  ];
+
   const handleExecute = async () => {
     setExecuting(true);
     setResult(null);
     setProgress(10);
 
-    const messages = ['正在分析任务需求...', '分解子任务并分派 AI...', '各 AI 模型并行执行中...', '验证结果一致性...', '主 AI 综合最终答案...'];
+    const messages = [t.smartExecute.progress0, t.smartExecute.progress1, t.smartExecute.progress2, t.smartExecute.progress3, t.smartExecute.progress4];
     let step = 0;
     const msgInterval = setInterval(() => {
       if (step < messages.length) {
@@ -41,11 +43,11 @@ export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
       const res = await executeTask(taskId, level);
       clearInterval(msgInterval);
       setResult(res);
-      setStatus('执行完成');
+      setStatus(t.smartExecute.done);
       setProgress(100);
     } catch (e) {
       clearInterval(msgInterval);
-      setStatus('执行失败: ' + String(e));
+      setStatus(t.smartExecute.failed + String(e));
       setProgress(0);
     } finally {
       setExecuting(false);
@@ -56,14 +58,14 @@ export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
     <div className="se-container">
       <div className="se-card">
         <div className="se-header">
-          <h2>🤖 智能执行</h2>
+          <h2>{t.smartExecute.title}</h2>
           <button className="se-btn-back" onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         <div className="se-task-info">
-          <span className="se-task-label">目标任务</span>
+          <span className="se-task-label">{t.smartExecute.targetTask}</span>
           <span className="se-task-name">{taskTitle}</span>
         </div>
 
@@ -96,7 +98,7 @@ export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
         {!executing && !result && (
           <button className="se-btn-launch" onClick={handleExecute}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            开始执行
+            {t.smartExecute.startBtn}
           </button>
         )}
 
@@ -104,12 +106,12 @@ export function SmartExecute({ taskId, taskTitle, onClose }: Props) {
           <div className="se-result">
             <div className="se-result-header">
               <span className={`se-result-badge ${result.status}`}>
-                {result.status === 'completed' ? '✅ 已完成' : '❌ 失败'}
+                {result.status === 'completed' ? t.smartExecute.completed : t.smartExecute.failedBadge}
               </span>
               <span className="se-result-level">{result.level}</span>
               <span className="se-result-time">{result.duration_ms}ms</span>
               {result.reference_results && (
-                <span className="se-result-refs">{result.passed}/{result.reference_results} AI 通过</span>
+                <span className="se-result-refs">{format(t.smartExecute.aiPassed, { passed: result.passed, total: result.reference_results })}</span>
               )}
             </div>
 

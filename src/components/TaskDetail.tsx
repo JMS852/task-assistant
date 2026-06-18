@@ -1,5 +1,6 @@
 import React from 'react';
 import { Task } from '../types';
+import { useI18n, format } from '../i18n';
 import './TaskDetail.css';
 
 interface Props {
@@ -8,9 +9,6 @@ interface Props {
   onExecute: () => void;
 }
 
-const priorityLabel = { high: '紧急', medium: '普通', low: '不急' };
-const statusLabel = { pending: '待处理', in_progress: '进行中', completed: '已完成' };
-
 function daysUntil(dateStr: string): number {
   const d = new Date(dateStr);
   const now = new Date();
@@ -18,8 +16,21 @@ function daysUntil(dateStr: string): number {
 }
 
 export function TaskDetail({ task, onComplete, onExecute }: Props) {
+  const { t } = useI18n();
   const remaining = task.deadline ? daysUntil(task.deadline) : null;
   const isOverdue = remaining !== null && remaining < 0;
+
+  const priorityLabel: Record<string, string> = {
+    high: t.common.priorityHigh,
+    medium: t.common.priorityMedium,
+    low: t.common.priorityLow,
+  };
+
+  const statusLabel: Record<string, string> = {
+    pending: t.common.statusPending,
+    in_progress: t.common.statusInProgress,
+    completed: t.common.statusCompleted,
+  };
 
   return (
     <div className="td-container">
@@ -27,7 +38,7 @@ export function TaskDetail({ task, onComplete, onExecute }: Props) {
         <div className="td-card-header">
           <div className="td-title-row">
             <div className={`td-priority-indicator ${task.priority}`} />
-            <h2>{task.title || '(无标题)'}</h2>
+            <h2>{task.title || t.taskDetail.untitled}</h2>
           </div>
           <span className={`td-status-chip ${task.status}`}>
             {statusLabel[task.status]}
@@ -38,22 +49,22 @@ export function TaskDetail({ task, onComplete, onExecute }: Props) {
           <div className="td-meta-item">
             <span className="td-meta-icon">👤</span>
             <div>
-              <div className="td-meta-label">发送者</div>
+              <div className="td-meta-label">{t.taskDetail.sender}</div>
               <div className="td-meta-value">{task.sender}</div>
             </div>
           </div>
           <div className="td-meta-item">
-            <span className="td-meta-icon">{task.source === 'wechat' ? '💬' : '🐧'}</span>
+            <span className="td-meta-icon">{task.source === 'wechat' ? t.common.sourceIconWechat : t.common.sourceIconQQ}</span>
             <div>
-              <div className="td-meta-label">来源</div>
-              <div className="td-meta-value">{task.source === 'wechat' ? '微信' : 'QQ'}</div>
+              <div className="td-meta-label">{t.taskDetail.source}</div>
+              <div className="td-meta-value">{task.source === 'wechat' ? t.common.sourceWechat : t.common.sourceQQ}</div>
             </div>
           </div>
           {task.group_name && (
             <div className="td-meta-item">
               <span className="td-meta-icon">👥</span>
               <div>
-                <div className="td-meta-label">群聊</div>
+                <div className="td-meta-label">{t.taskDetail.group}</div>
                 <div className="td-meta-value">{task.group_name}</div>
               </div>
             </div>
@@ -61,18 +72,18 @@ export function TaskDetail({ task, onComplete, onExecute }: Props) {
           <div className="td-meta-item">
             <span className="td-meta-icon">{isOverdue ? '🔴' : '📅'}</span>
             <div>
-              <div className="td-meta-label">截止日期</div>
+              <div className="td-meta-label">{t.taskDetail.deadline}</div>
               <div className={`td-meta-value ${isOverdue ? 'overdue' : ''}`}>
                 {task.deadline
-                  ? `${task.deadline} (${isOverdue ? `已过期 ${Math.abs(remaining!)} 天` : `剩余 ${remaining} 天`})`
-                  : '无截止日期'}
+                  ? `${task.deadline} (${isOverdue ? format(t.taskDetail.overdue, { days: Math.abs(remaining!) }) : format(t.taskDetail.remaining, { days: remaining! })})`
+                  : t.taskDetail.noDeadline}
               </div>
             </div>
           </div>
           <div className="td-meta-item">
             <span className="td-meta-icon">🎯</span>
             <div>
-              <div className="td-meta-label">优先级</div>
+              <div className="td-meta-label">{t.taskDetail.priority}</div>
               <div className={`td-meta-value td-prio-${task.priority}`}>
                 {priorityLabel[task.priority]}
               </div>
@@ -81,36 +92,36 @@ export function TaskDetail({ task, onComplete, onExecute }: Props) {
           <div className="td-meta-item">
             <span className="td-meta-icon">🤖</span>
             <div>
-              <div className="td-meta-label">AI 置信度</div>
+              <div className="td-meta-label">{t.taskDetail.aiConfidence}</div>
               <div className="td-meta-value">{Math.round(task.confidence * 100)}%</div>
             </div>
           </div>
         </div>
 
         <div className="td-section">
-          <h3 className="td-section-title">📝 任务描述</h3>
-          <p className="td-description">{task.description || '暂无描述'}</p>
+          <h3 className="td-section-title">{t.taskDetail.description}</h3>
+          <p className="td-description">{task.description || t.taskDetail.noDescription}</p>
         </div>
 
         {task.context_missing && (
           <div className="td-context-warning">
             <span>⚠️</span>
             <div>
-              <strong>上下文不完整</strong>
-              <p>无法获取完整的消息上下文，可能影响 AI 执行效果</p>
+              <strong>{t.taskDetail.contextMissing}</strong>
+              <p>{t.taskDetail.contextMissingHint}</p>
             </div>
-            <button className="td-context-btn">补全</button>
+            <button className="td-context-btn">{t.taskDetail.completeContext}</button>
           </div>
         )}
 
         <div className="td-actions">
           <button className="td-btn-execute" onClick={onExecute}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            智能执行
+            {t.taskDetail.smartExecute}
           </button>
           <button className="td-btn-complete" onClick={() => onComplete(task.id)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-            标记完成
+            {t.taskDetail.markComplete}
           </button>
         </div>
       </div>

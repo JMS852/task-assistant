@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Task } from '../types';
+import { useI18n, format } from '../i18n';
 import './TaskList.css';
 
 interface Props {
@@ -11,17 +12,34 @@ interface Props {
   onRefresh: () => void;
 }
 
-const priorityConfig = {
-  high: { label: '紧急', color: '#e5484d', icon: '●' },
-  medium: { label: '普通', color: '#f5a623', icon: '◐' },
-  low: { label: '不急', color: '#30a46c', icon: '○' },
-};
-
-const sourceIcon = { wechat: '💬', qq: '🐧' };
-
 export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onRefresh }: Props) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [search, setSearch] = useState('');
+
+  const priorityConfig: Record<string, { color: string; icon: string }> = {
+    high: { color: '#e5484d', icon: '●' },
+    medium: { color: '#f5a623', icon: '◐' },
+    low: { color: '#30a46c', icon: '○' },
+  };
+
+  const priorityLabels: Record<string, string> = {
+    high: t.common.priorityHigh,
+    medium: t.common.priorityMedium,
+    low: t.common.priorityLow,
+  };
+
+  const sourceIcon: Record<string, string> = {
+    wechat: t.common.sourceIconWechat,
+    qq: t.common.sourceIconQQ,
+  };
+
+  const filterLabels: Record<string, string> = {
+    all: t.taskList.filterAll,
+    high: t.taskList.filterHigh,
+    medium: t.taskList.filterMedium,
+    low: t.taskList.filterLow,
+  };
 
   const activeTasks = tasks.filter(t => t.status !== 'completed');
   const filtered = activeTasks.filter(t => {
@@ -40,7 +58,7 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
     return (
       <div className="tl-container">
         <div className="tl-header">
-          <span className="tl-header-title">待办清单</span>
+          <span className="tl-header-title">{t.taskList.title}</span>
         </div>
         <div className="tl-loading">
           {[1,2,3,4,5].map(i => (
@@ -54,31 +72,32 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
     );
   }
 
-  const renderItem = (t: Task) => {
-    const cfg = priorityConfig[t.priority];
+  const renderItem = (task: Task) => {
+    const cfg = priorityConfig[task.priority];
+    const plabel = priorityLabels[task.priority];
     return (
       <div
-        key={t.id}
-        className={`tl-item ${selectedId === t.id ? 'selected' : ''}`}
-        onClick={() => onSelect(t)}
+        key={task.id}
+        className={`tl-item ${selectedId === task.id ? 'selected' : ''}`}
+        onClick={() => onSelect(task)}
       >
-        <div className="tl-item-priority" style={{ color: cfg.color }} title={cfg.label}>
+        <div className="tl-item-priority" style={{ color: cfg.color }} title={plabel}>
           {cfg.icon}
         </div>
         <div className="tl-item-body">
-          <div className="tl-item-title">{t.title || '(无标题)'}</div>
+          <div className="tl-item-title">{task.title || t.taskList.untitled}</div>
           <div className="tl-item-meta">
-            <span className="tl-item-source">{sourceIcon[t.source]}</span>
-            <span>{t.sender}</span>
-            {t.deadline && <span className="tl-item-deadline">📅 {t.deadline}</span>}
+            <span className="tl-item-source">{sourceIcon[task.source]}</span>
+            <span>{task.sender}</span>
+            {task.deadline && <span className="tl-item-deadline">{t.taskList.deadlinePrefix} {task.deadline}</span>}
           </div>
         </div>
         <div className="tl-item-actions">
-          {t.context_missing && <span className="tl-badge-warn" title="缺少上下文">!</span>}
+          {task.context_missing && <span className="tl-badge-warn" title={t.taskList.missingContext}>!</span>}
           <button
             className="tl-btn-check"
-            onClick={e => { e.stopPropagation(); onComplete(t.id); }}
-            title="标记完成"
+            onClick={e => { e.stopPropagation(); onComplete(task.id); }}
+            title={t.taskList.markComplete}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
           </button>
@@ -94,7 +113,7 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
       <div className="tl-group" key={priority}>
         <div className="tl-group-header">
           <span className="tl-group-dot" style={{ background: cfg.color }} />
-          <span>{cfg.label}</span>
+          <span>{priorityLabels[priority]}</span>
           <span className="tl-group-count">{items.length}</span>
         </div>
         {items.map(renderItem)}
@@ -105,8 +124,8 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
   return (
     <div className="tl-container">
       <div className="tl-header">
-        <span className="tl-header-title">待办清单</span>
-        <button className="tl-btn-refresh" onClick={onRefresh} title="刷新">
+        <span className="tl-header-title">{t.taskList.title}</span>
+        <button className="tl-btn-refresh" onClick={onRefresh} title={t.taskList.refresh}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 102.1-9.4L1 10"/></svg>
         </button>
       </div>
@@ -116,7 +135,7 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
         <input
           type="text"
           className="tl-search-input"
-          placeholder="搜索任务或发送者..."
+          placeholder={t.taskList.searchPlaceholder}
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -129,7 +148,7 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
             className={`tl-filter-btn ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {{ all: '全部', high: '紧急', medium: '普通', low: '不急' }[f]}
+            {filterLabels[f]}
           </button>
         ))}
       </div>
@@ -141,14 +160,14 @@ export function TaskList({ tasks, loading, selectedId, onSelect, onComplete, onR
         {filtered.length === 0 && search && (
           <div className="tl-empty">
             <div style={{fontSize:28, marginBottom:8}}>🔍</div>
-            <div>未找到 "{search}"</div>
+            <div>{format(t.taskList.noResult, { search })}</div>
           </div>
         )}
         {filtered.length === 0 && !search && activeTasks.length === 0 && (
           <div className="tl-empty">
             <div style={{fontSize:32, marginBottom:8}}>🎉</div>
-            <div>暂无待办任务</div>
-            <div className="tl-empty-sub">等待微信/QQ 消息采集...</div>
+            <div>{t.taskList.noTasks}</div>
+            <div className="tl-empty-sub">{t.taskList.noTasksHint}</div>
           </div>
         )}
       </div>

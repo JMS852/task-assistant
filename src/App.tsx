@@ -5,8 +5,10 @@ import { TaskDetail } from './components/TaskDetail';
 import { Settings } from './components/Settings';
 import { SmartExecute } from './components/SmartExecute';
 import { Task } from './types';
+import { useI18n, format } from './i18n';
 
 export default function App() {
+  const { t } = useI18n();
   const { tasks, loading, completeTask, refresh } = useTasks();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -23,16 +25,16 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-left">
           <div className="app-logo">✦</div>
-          <span className="app-title">待办助手</span>
+          <span className="app-title">{t.app.title}</span>
         </div>
         <div className="app-header-right">
           {activeCount > 0 && (
             <div className="header-badge">
               <span className="dot" />
-              {activeCount} 个待办
+              {format(t.app.taskCount, { count: activeCount })}
             </div>
           )}
-          <button className="btn-icon" onClick={() => setShowSettings(true)} title="设置">⚙</button>
+          <button className="btn-icon" onClick={() => setShowSettings(true)} title={t.app.settings}>⚙</button>
         </div>
       </header>
 
@@ -63,8 +65,8 @@ export default function App() {
           ) : (
             <div className="empty-state">
               <div className="empty-state-icon">📋</div>
-              <h3>选择一个任务</h3>
-              <p>从左侧列表中选择任务查看详情<br />或点击"智能执行"让 AI 帮你完成</p>
+              <h3>{t.app.emptyTitle}</h3>
+              <p>{t.app.emptyDesc}<br />{t.app.emptyHint}</p>
             </div>
           )}
         </div>
