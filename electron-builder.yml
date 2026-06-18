@@ -1,0 +1,18 @@
+appId: com.task-assistant.app
+productName: 待办助手
+directories:
+  output: release
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - python/**/*
+  - node_modules/**/*
+extraResources:
+  - from: python
+    to: python
+win:
+  target: nsis
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

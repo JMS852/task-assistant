@@ -1,0 +1,25 @@
+.settings { max-width: 640px; margin: 0 auto; }
+.settings-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.settings-header button {
+  padding: 6px 14px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer;
+}
+.settings-header h2 { font-size: 20px; }
+.settings-section {
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+  padding: 20px; margin-bottom: 16px;
+}
+.settings-section h3 { font-size: 16px; margin-bottom: 16px; color: #1a1a1a; }
+.settings-hint { font-size: 12px; color: #999; margin-bottom: 16px; line-height: 1.5; }
+.config-item { margin-bottom: 12px; }
+.config-item label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.config-item input[type="checkbox"] { width: 16px; height: 16px; }
+.endpoint-readonly {
+  display: block; width: 100%; margin-top: 6px; padding: 6px 10px;
+  border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; color: #888; background: #f9f9f9;
+}
+.settings-section button {
+  padding: 8px 20px; background: #1a73e8; color: #fff; border: none;
+  border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;
+}
+.settings-section button:hover { background: #1557b0; }
+.settings-section p { font-size: 13px; color: #666; margin-bottom: 4px; }
