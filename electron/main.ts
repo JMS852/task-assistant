@@ -2,7 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron';
 import path from 'path';
 import { initDatabase, queryAll, queryOne, execute } from './services/db';
 import { startApiServer } from './api/server';
-import { startPythonBackend, sendToPython } from './services/python-bridge';
+import { startPythonBackend, sendToPython, stopPythonBackend } from './services/python-bridge';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -28,8 +28,11 @@ function createWindow() {
   }
 
   mainWindow.on('close', (e) => {
-    e.preventDefault();
-    mainWindow?.hide();
+    // Minimize to tray instead of closing; only allow close when actually quitting
+    if (!(app as any).isQuitting) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
   });
 }
 
@@ -108,6 +111,11 @@ app.whenReady().then(async () => {
   }, 1000);
   createWindow();
   createTray();
+});
+
+app.on('before-quit', () => {
+  (app as any).isQuitting = true;
+  stopPythonBackend();
 });
 
 app.on('window-all-closed', () => {});
