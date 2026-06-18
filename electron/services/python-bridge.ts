@@ -5,7 +5,9 @@ let pythonProcess: ChildProcess | null = null;
 
 export function startPythonBackend(): void {
   const pythonPath = path.join(__dirname, '..', '..', 'python', 'main.py');
-  const pythonExe = process.platform === 'win32' ? 'python' : 'python3';
+  const pythonExe = process.platform === 'win32'
+    ? path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python312', 'python.exe')
+    : 'python3';
   pythonProcess = spawn(pythonExe, [pythonPath], {
     stdio: ['pipe', 'pipe', 'pipe'],
     cwd: path.join(__dirname, '..', '..', 'python'),

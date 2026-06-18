@@ -34,7 +34,8 @@ function createWindow() {
 }
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
+  const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
+  const icon = nativeImage.createFromPath(iconPath);
   tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
     { label: '显示主窗口', click: () => mainWindow?.show() },

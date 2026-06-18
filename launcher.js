@@ -1,8 +1,28 @@
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const path = require('path');
 
-// Start Vite dev server
-const vite = spawn('npx', ['vite'], {
+// Kill any process holding port 5173 from a previous run
+try {
+  const out = execSync('netstat -ano | findstr :5173', {
+    encoding: 'utf8', shell: 'cmd.exe', timeout: 3000,
+  });
+  const pids = new Set();
+  for (const line of out.trim().split('\n')) {
+    const parts = line.trim().split(/\s+/);
+    const pid = parts[parts.length - 1];
+    if (pid && pid !== '0') pids.add(pid);
+  }
+  if (pids.size > 0) {
+    try {
+      execSync(`taskkill /F /PID ${[...pids].join(' /PID ')}`, {
+        shell: 'cmd.exe', timeout: 3000,
+      });
+    } catch {}
+  }
+} catch {}
+
+// Start Vite dev server on port 5173
+const vite = spawn('npx', ['vite', '--port', '5173', '--strictPort'], {
   cwd: __dirname,
   shell: true,
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -13,9 +33,9 @@ let started = false;
 function startElectron() {
   if (started) return;
   started = true;
-  const electron = spawn('npx', ['electron', '.'], {
+  const electronExe = path.join(__dirname, 'node_modules', 'electron', 'dist', 'electron.exe');
+  const electron = spawn(electronExe, ['.'], {
     cwd: __dirname,
-    shell: true,
     stdio: 'ignore',
     detached: true,
   });
