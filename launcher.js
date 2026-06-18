@@ -1,25 +1,34 @@
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 
-// Kill any process holding port 5173 from a previous run
+// Kill previous Electron instances (they hold port 3001) and free port 5173
 try {
-  const out = execSync('netstat -ano | findstr :5173', {
-    encoding: 'utf8', shell: 'cmd.exe', timeout: 3000,
-  });
-  const pids = new Set();
-  for (const line of out.trim().split('\n')) {
-    const parts = line.trim().split(/\s+/);
-    const pid = parts[parts.length - 1];
-    if (pid && pid !== '0') pids.add(pid);
-  }
-  if (pids.size > 0) {
-    try {
-      execSync(`taskkill /F /PID ${[...pids].join(' /PID ')}`, {
-        shell: 'cmd.exe', timeout: 3000,
-      });
-    } catch {}
-  }
+  execSync('cmd /c "taskkill /F /IM electron.exe 2>nul & exit 0"', { timeout: 3000 });
 } catch {}
+
+function killPort(port) {
+  try {
+    const out = execSync(`netstat -ano | findstr :${port}`, {
+      encoding: 'utf8', shell: 'cmd.exe', timeout: 3000,
+    });
+    const pids = new Set();
+    for (const line of out.trim().split('\n')) {
+      const parts = line.trim().split(/\s+/);
+      const pid = parts[parts.length - 1];
+      if (pid && pid !== '0') pids.add(pid);
+    }
+    if (pids.size > 0) {
+      try {
+        execSync(`taskkill /F /PID ${[...pids].join(' /PID ')}`, {
+          shell: 'cmd.exe', timeout: 3000,
+        });
+      } catch {}
+    }
+  } catch {}
+}
+
+killPort(5173);
+killPort(3001);
 
 // Start Vite dev server on port 5173
 const vite = spawn('npx', ['vite', '--port', '5173', '--strictPort'], {
