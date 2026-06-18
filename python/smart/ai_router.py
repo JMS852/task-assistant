@@ -18,6 +18,17 @@ def _init_providers():
         }
 
 
+def configure_provider(provider: str, api_key: str = '', endpoint: str = '', enabled: bool = True):
+    """接收来自 Electron 主进程的配置，动态注入 API Key"""
+    _init_providers()
+    p = PROVIDERS.get(provider)
+    if p:
+        p.configure(api_key=api_key, endpoint=endpoint, enabled=enabled)
+        status = 'enabled' if enabled else 'disabled'
+        return {'status': 'ok', 'provider': provider, 'state': status}
+    return {'status': 'error', 'message': f'Unknown provider: {provider}'}
+
+
 def get_available_providers() -> list:
     _init_providers()
     return [name for name, p in PROVIDERS.items() if p.is_available()]

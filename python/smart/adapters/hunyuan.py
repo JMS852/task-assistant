@@ -21,11 +21,25 @@ class HunyuanProvider(AIProvider):
         self.secret_key = os.environ.get('HUNYUAN_SECRET_KEY', '')
         self.endpoint = 'hunyuan.tencentcloudapi.com'
 
+    def _resolve_keys(self):
+        """Instance-level _api_key (id:key format) takes priority, then env vars."""
+        if self._api_key and ':' in self._api_key:
+            parts = self._api_key.split(':', 1)
+            return parts[0].strip(), parts[1].strip()
+        return self.secret_id, self.secret_key
+
+    def configure(self, api_key: str = '', endpoint: str = '', enabled: bool = True):
+        self._api_key = api_key
+        self._endpoint = endpoint
+        self._enabled = enabled
+
     def _sign(self, params: dict) -> dict:
         algorithm = 'TC3-HMAC-SHA256'
         timestamp = int(time.time())
         date = dt.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
         service = 'hunyuan'
+
+        sid, skey = self._resolve_keys()
 
         payload = json.dumps(params)
         canonical_headers = f'content-type:application/json\nhost:{self.endpoint}\n'
@@ -38,12 +52,12 @@ class HunyuanProvider(AIProvider):
         def _sign_str(key: bytes, msg: str) -> bytes:
             return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
-        secret_date = _sign_str(('TC3' + self.secret_key).encode('utf-8'), date)
+        secret_date = _sign_str(('TC3' + skey).encode('utf-8'), date)
         secret_service = _sign_str(secret_date, service)
         secret_signing = _sign_str(secret_service, 'tc3_request')
         signature = hmac.new(secret_signing, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
 
-        authorization = f'{algorithm} Credential={self.secret_id}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
+        authorization = f'{algorithm} Credential={sid}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
         return {
             'Authorization': authorization,
             'Content-Type': 'application/json',
@@ -83,4 +97,5 @@ class HunyuanProvider(AIProvider):
         )
 
     def is_available(self) -> bool:
-        return bool(self.secret_id) and bool(self.secret_key) and HAS_HTTPX
+        sid, skey = self._resolve_keys()
+        return self._enabled and bool(sid) and bool(skey) and HAS_HTTPX

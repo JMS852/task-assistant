@@ -84,6 +84,34 @@
   color: var(--accent);
 }
 
+/* ── API Key Input Row ── */
+.s-key-row {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.s-key-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.s-key-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(79,110,247,0.15); }
+.s-key-input::placeholder { color: #bbb; font-family: inherit; }
+.s-key-eye {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text-secondary); cursor: pointer;
+  flex-shrink: 0; transition: all var(--transition);
+}
+.s-key-eye:hover { background: var(--bg); color: var(--text); }
+
 /* ── Save Button ── */
 .s-btn-save {
   padding: 12px 32px; border: none; border-radius: 8px;

@@ -17,10 +17,17 @@ class QianwenProvider(AIProvider):
         self.base_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
         self._client = None
 
+    def _resolve_key(self):
+        return self._api_key or self.api_key
+
     def _get_client(self):
-        if not self._client and self.api_key and HAS_OPENAI:
-            self._client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        key = self._resolve_key()
+        if not self._client and key and HAS_OPENAI:
+            self._client = OpenAI(api_key=key, base_url=self._endpoint or self.base_url)
         return self._client
+
+    def _clear_client(self):
+        self._client = None
 
     def chat(self, prompt: str, temperature: float = 0.3) -> AIResponse:
         client = self._get_client()
@@ -44,4 +51,4 @@ class QianwenProvider(AIProvider):
         )
 
     def is_available(self) -> bool:
-        return bool(self.api_key) and HAS_OPENAI
+        return self._enabled and bool(self._resolve_key()) and HAS_OPENAI

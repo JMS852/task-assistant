@@ -12,25 +12,38 @@ interface ProviderConfig {
   envVar: string;
   endpoint: string;
   enabled: boolean;
+  apiKey: string;
 }
 
 const defaultProviders: ProviderConfig[] = [
-  { provider: 'deepseek', displayName: 'DeepSeek', icon: '🔮', envVar: 'DEEPSEEK_API_KEY', endpoint: 'https://api.deepseek.com/v1', enabled: true },
-  { provider: 'qianwen', displayName: '通义千问', icon: '☁️', envVar: 'DASHSCOPE_API_KEY', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1', enabled: true },
-  { provider: 'doubao', displayName: '豆包', icon: '🫘', envVar: 'DOUBAO_API_KEY', endpoint: 'https://ark.cn-beijing.volces.com/api/v3', enabled: false },
-  { provider: 'hunyuan', displayName: '混元', icon: '🌐', envVar: 'HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY', endpoint: 'https://hunyuan.tencentcloudapi.com', enabled: false },
+  { provider: 'deepseek', displayName: 'DeepSeek', icon: '🔮', envVar: 'DEEPSEEK_API_KEY', endpoint: 'https://api.deepseek.com/v1', enabled: true, apiKey: '' },
+  { provider: 'qianwen', displayName: '通义千问', icon: '☁️', envVar: 'DASHSCOPE_API_KEY', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1', enabled: true, apiKey: '' },
+  { provider: 'doubao', displayName: '豆包', icon: '🫘', envVar: 'DOUBAO_API_KEY', endpoint: 'https://ark.cn-beijing.volces.com/api/v3', enabled: false, apiKey: '' },
+  { provider: 'hunyuan', displayName: '混元', icon: '🌐', envVar: 'HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY', endpoint: 'https://hunyuan.tencentcloudapi.com', enabled: false, apiKey: '' },
 ];
+
+declare global {
+  interface Window {
+    electronAPI?: {
+      saveSettings: (settings: any[]) => Promise<any>;
+    };
+  }
+}
 
 export function Settings({ onBack }: Props) {
   const [providers, setProviders] = useState<ProviderConfig[]>(defaultProviders);
   const [saved, setSaved] = useState(false);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const saved = localStorage.getItem('ai_providers');
-    if (saved) {
+    const stored = localStorage.getItem('ai_providers');
+    if (stored) {
       try {
-        const parsed = JSON.parse(saved);
-        setProviders(parsed);
+        const parsed = JSON.parse(stored);
+        setProviders(defaultProviders.map(dp => {
+          const existing = parsed.find((p: ProviderConfig) => p.provider === dp.provider);
+          return existing ? { ...dp, ...existing, apiKey: existing.apiKey || '' } : dp;
+        }));
       } catch {}
     }
   }, []);
@@ -41,8 +54,32 @@ export function Settings({ onBack }: Props) {
     setProviders(next);
   };
 
+  const setApiKey = (idx: number, key: string) => {
+    const next = [...providers];
+    next[idx] = { ...next[idx], apiKey: key };
+    setProviders(next);
+  };
+
+  const toggleKeyVisible = (provider: string) => {
+    setVisibleKeys(prev => {
+      const next = new Set(prev);
+      next.has(provider) ? next.delete(provider) : next.add(provider);
+      return next;
+    });
+  };
+
   const saveSettings = () => {
     localStorage.setItem('ai_providers', JSON.stringify(providers));
+    // Also push to Electron main process → SQLite + Python
+    if (window.electronAPI?.saveSettings) {
+      window.electronAPI.saveSettings(providers.map(p => ({
+        id: p.provider,
+        provider: p.provider,
+        api_key_encrypted: p.apiKey,
+        endpoint: p.endpoint,
+        enabled: p.enabled,
+      })));
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -63,7 +100,7 @@ export function Settings({ onBack }: Props) {
       <div className="s-content">
         <div className="s-page">
           <h2>AI 服务配置</h2>
-          <p className="s-subtitle">配置 AI 服务商的 API Key，用于任务识别和智能执行。密钥通过环境变量设置，不存储在本地。</p>
+          <p className="s-subtitle">配置 AI 服务商的 API Key，用于任务识别和智能执行。密钥加密存储在本机，不会上传到任何第三方。</p>
 
           <div className="s-provider-list">
             {providers.map((p, idx) => (
@@ -84,9 +121,27 @@ export function Settings({ onBack }: Props) {
                   </button>
                 </div>
                 {p.enabled && (
-                  <div className="s-provider-env">
-                    <span className="s-env-label">环境变量</span>
-                    <code className="s-env-code">{p.envVar}</code>
+                  <div className="s-key-row">
+                    <input
+                      className="s-key-input"
+                      type={visibleKeys.has(p.provider) ? 'text' : 'password'}
+                      value={p.apiKey}
+                      onChange={(e) => setApiKey(idx, e.target.value)}
+                      placeholder={p.provider === 'hunyuan' ? '输入 SecretId:SecretKey…' : `输入 ${p.displayName} API Key…`}
+                      spellCheck={false}
+                      autoComplete="off"
+                    />
+                    <button
+                      className="s-key-eye"
+                      onClick={() => toggleKeyVisible(p.provider)}
+                      title={visibleKeys.has(p.provider) ? '隐藏密钥' : '显示密钥'}
+                    >
+                      {visibleKeys.has(p.provider) ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
@@ -100,10 +155,11 @@ export function Settings({ onBack }: Props) {
           <div className="s-note">
             <h4>📌 使用说明</h4>
             <ul>
-              <li>在系统环境变量中设置对应的 API Key</li>
-              <li>至少启用一个 AI 服务才能使用智能执行功能</li>
+              <li>直接在上方输入框中填入 API Key 即可，无需配置系统环境变量</li>
+              <li>至少启用并配置一个 AI 服务才能使用智能执行功能</li>
               <li>建议启用 DeepSeek 和通义千问作为基础配置</li>
-              <li>API Key 存储在本地，不会上传到任何第三方</li>
+              <li>密钥保存在本机数据库中，不会上传到任何第三方</li>
+              <li>混元需使用 SecretId:SecretKey 格式（用半角冒号分隔）</li>
             </ul>
           </div>
         </div>

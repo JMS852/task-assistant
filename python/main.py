@@ -29,6 +29,16 @@ def main():
                 from smart.orchestrator import execute
                 result = execute(cmd['data'])
                 print(json.dumps(result), flush=True)
+            elif action == 'configure_provider':
+                from smart.ai_router import configure_provider
+                data = cmd['data']
+                result = configure_provider(
+                    provider=data['provider'],
+                    api_key=data.get('api_key', ''),
+                    endpoint=data.get('endpoint', ''),
+                    enabled=data.get('enabled', True),
+                )
+                print(json.dumps(result), flush=True)
             else:
                 print(json.dumps({'error': f'Unknown action: {action}'}), flush=True)
         except Exception as e:

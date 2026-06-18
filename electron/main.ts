@@ -74,12 +74,25 @@ ipcMain.handle('get-settings', () => {
   return queryAll('SELECT * FROM ai_config');
 });
 
+function pushConfigToPython(setting: any) {
+  sendToPython({
+    action: 'configure_provider',
+    data: {
+      provider: setting.provider,
+      api_key: setting.api_key_encrypted || '',
+      endpoint: setting.endpoint || '',
+      enabled: setting.enabled === 1 || setting.enabled === true,
+    },
+  });
+}
+
 ipcMain.handle('save-settings', (_e, settings: any[]) => {
   for (const s of settings) {
     execute(
       'INSERT OR REPLACE INTO ai_config (id, provider, api_key_encrypted, endpoint, enabled) VALUES (?, ?, ?, ?, ?)',
       [s.id, s.provider, s.api_key_encrypted, s.endpoint, s.enabled ? 1 : 0]
     );
+    pushConfigToPython(s);
   }
   return { success: true };
 });
@@ -88,6 +101,11 @@ app.whenReady().then(async () => {
   await initDatabase();
   startApiServer();
   startPythonBackend();
+  // Push saved API keys to Python once it's ready
+  setTimeout(() => {
+    const rows = queryAll('SELECT * FROM ai_config WHERE enabled = 1');
+    for (const row of rows) pushConfigToPython(row);
+  }, 1000);
   createWindow();
   createTray();
 });
