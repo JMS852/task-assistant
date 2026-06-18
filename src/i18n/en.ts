@@ -95,6 +95,13 @@ const en: Translations = {
     langEn: 'English',
   },
 
+  providers: {
+    deepseek: 'DeepSeek',
+    qianwen: 'Qwen',
+    doubao: 'Doubao',
+    hunyuan: 'Hunyuan',
+  },
+
   common: {
     priorityHigh: 'Urgent',
     priorityMedium: 'Normal',

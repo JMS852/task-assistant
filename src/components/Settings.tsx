@@ -18,9 +18,9 @@ interface ProviderConfig {
 
 const defaultProviders: ProviderConfig[] = [
   { provider: 'deepseek', displayName: 'DeepSeek', icon: '🔮', envVar: 'DEEPSEEK_API_KEY', endpoint: 'https://api.deepseek.com/v1', enabled: true, apiKey: '' },
-  { provider: 'qianwen', displayName: 'Qwen (通义千问)', icon: '☁️', envVar: 'DASHSCOPE_API_KEY', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1', enabled: true, apiKey: '' },
-  { provider: 'doubao', displayName: 'Doubao (豆包)', icon: '🫘', envVar: 'DOUBAO_API_KEY', endpoint: 'https://ark.cn-beijing.volces.com/api/v3', enabled: false, apiKey: '' },
-  { provider: 'hunyuan', displayName: 'Hunyuan (混元)', icon: '🌐', envVar: 'HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY', endpoint: 'https://hunyuan.tencentcloudapi.com', enabled: false, apiKey: '' },
+  { provider: 'qianwen', displayName: '通义千问', icon: '☁️', envVar: 'DASHSCOPE_API_KEY', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1', enabled: true, apiKey: '' },
+  { provider: 'doubao', displayName: '豆包', icon: '🫘', envVar: 'DOUBAO_API_KEY', endpoint: 'https://ark.cn-beijing.volces.com/api/v3', enabled: false, apiKey: '' },
+  { provider: 'hunyuan', displayName: '混元', icon: '🌐', envVar: 'HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY', endpoint: 'https://hunyuan.tencentcloudapi.com', enabled: false, apiKey: '' },
 ];
 
 declare global {
@@ -123,7 +123,7 @@ export function Settings({ onBack }: Props) {
                 <div className="s-provider-main">
                   <div className="s-provider-icon">{p.icon}</div>
                   <div className="s-provider-info">
-                    <div className="s-provider-name">{p.displayName}</div>
+                    <div className="s-provider-name">{t.providers[p.provider as keyof typeof t.providers] || p.displayName}</div>
                     <div className="s-provider-endpoint">{p.endpoint}</div>
                   </div>
                   <button
@@ -142,7 +142,7 @@ export function Settings({ onBack }: Props) {
                       type={visibleKeys.has(p.provider) ? 'text' : 'password'}
                       value={p.apiKey}
                       onChange={(e) => setApiKey(idx, e.target.value)}
-                      placeholder={p.provider === 'hunyuan' ? t.settings.keyPlaceholderHunyuan : format(t.settings.keyPlaceholder, { name: p.displayName.split(' ')[0] })}
+                      placeholder={p.provider === 'hunyuan' ? t.settings.keyPlaceholderHunyuan : format(t.settings.keyPlaceholder, { name: t.providers[p.provider as keyof typeof t.providers] || p.displayName })}
                       spellCheck={false}
                       autoComplete="off"
                     />

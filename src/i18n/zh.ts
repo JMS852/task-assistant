@@ -93,6 +93,13 @@ const zh = {
     langEn: 'English',
   },
 
+  providers: {
+    deepseek: 'DeepSeek',
+    qianwen: '通义千问',
+    doubao: '豆包',
+    hunyuan: '混元',
+  },
+
   common: {
     priorityHigh: '紧急',
     priorityMedium: '普通',
