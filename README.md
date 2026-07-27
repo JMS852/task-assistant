@@ -51,7 +51,7 @@ pip install easyocr pyperclip pillow pytesseract
 ### 启动
 
 ```bash
-git clone https://github.com/JMS852/待办助手.git
+git clone https://github.com/JMS852/daiban-zhushou.git
 cd task-assistant
 npm install
 pip install -r requirements.txt
