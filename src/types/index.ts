@@ -4,19 +4,19 @@ export interface Task {
   description: string;
   priority: 'high' | 'medium' | 'low';
   deadline: string | null;
-  source: 'wechat' | 'qq';
+  source: string;
   sender: string;
   group_name: string | null;
   status: 'pending' | 'in_progress' | 'completed';
   confidence: number;
-  context_missing: boolean;
+  context_missing: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface RawMessage {
   id: string;
-  source: 'wechat' | 'qq';
+  source: string;
   sender: string;
   group_name: string | null;
   content: string;

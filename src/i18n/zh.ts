@@ -25,6 +25,13 @@ const zh = {
     noTasksHint: '等待微信/QQ 消息采集…',
     demoBtn: '生成演示数据',
     demoDone: '已生成 {count} 条演示任务',
+    filterCompleted: '已完成',
+    noCompleted: '暂无已完成任务',
+    noCompletedHint: '标记完成的任务会出现在这里',
+    clearCompleted: '清空已完成',
+    confirmClear: '确定要清空所有已完成任务吗？此操作不可撤销。',
+    taskFrom: '来自 {sender}',
+    completedCount: '{count} 个已完成',
   },
 
   taskDetail: {
@@ -102,6 +109,21 @@ const zh = {
     hunyuan: '混元',
   },
 
+  addTask: {
+    title: '添加待办',
+    taskTitle: '任务标题',
+    titlePlaceholder: '输入任务标题…',
+    description: '描述',
+    descPlaceholder: '输入任务详情（可选）…',
+    priority: '优先级',
+    deadline: '截止日期',
+    sender: '创建者',
+    senderPlaceholder: '谁交代的任务？（可选）',
+    defaultSender: '我',
+    cancel: '取消',
+    submit: '添加',
+  },
+
   common: {
     priorityHigh: '紧急',
     priorityMedium: '普通',
@@ -117,4 +139,11 @@ const zh = {
 } as const;
 
 export default zh;
-export type Translations = typeof zh;
+
+/** Widen literal string/number/boolean types so translations in other languages can differ. */
+type WidenLiterals<T> = T extends string ? string
+  : T extends number ? number
+  : T extends boolean ? boolean
+  : { [K in keyof T]: WidenLiterals<T[K]> };
+
+export type Translations = WidenLiterals<typeof zh>;

@@ -1,0 +1,100 @@
+.atm-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  animation: atm-fadein 0.15s ease;
+}
+@keyframes atm-fadein { from { opacity: 0; } to { opacity: 1; } }
+
+.atm-modal {
+  background: var(--surface);
+  border-radius: 12px;
+  width: 440px; max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+  animation: atm-slidein 0.2s ease;
+}
+@keyframes atm-slidein { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.atm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.atm-header h2 {
+  font-size: 16px; font-weight: 600; color: var(--text);
+}
+.atm-close {
+  width: 32px; height: 32px;
+  border: none; border-radius: 6px;
+  background: transparent; color: #999;
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.atm-close:hover { background: var(--bg); color: var(--text); }
+
+.atm-modal form {
+  padding: 16px 24px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.atm-field {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.atm-field label {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.atm-required { color: var(--danger); }
+
+.atm-field input,
+.atm-field textarea,
+.atm-field select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px; font-family: inherit;
+  outline: none;
+  transition: all var(--transition);
+}
+.atm-field input:focus,
+.atm-field textarea:focus,
+.atm-field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,110,247,0.1);
+}
+.atm-field textarea {
+  resize: vertical; min-height: 64px;
+}
+
+.atm-row {
+  display: flex; gap: 12px;
+}
+.atm-flex-1 { flex: 1; }
+
+.atm-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 4px;
+}
+.atm-btn-cancel {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+  transition: all var(--transition);
+}
+.atm-btn-cancel:hover { background: var(--bg); }
+.atm-btn-submit {
+  padding: 8px 20px;
+  border: none; border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: all var(--transition);
+}
+.atm-btn-submit:hover { background: #3d5cf7; }
+.atm-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }

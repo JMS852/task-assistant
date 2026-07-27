@@ -1,6 +1,11 @@
 /* ── Container ── */
 .td-container {
   flex: 1; overflow-y: auto; padding: 24px;
+  animation: td-slidein 0.3s ease;
+}
+@keyframes td-slidein {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 .td-container::-webkit-scrollbar { width: 6px; }
 .td-container::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }

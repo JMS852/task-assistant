@@ -70,14 +70,71 @@
 
 /* ── Progress ── */
 .se-progress-section { margin-bottom: 20px; }
+
+/* ── Loading Animation ── */
+.se-loading-section {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  padding: 40px 20px;
+  animation: se-fadein 0.4s ease;
+}
+@keyframes se-fadein {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.se-orbital {
+  position: relative;
+  width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+.se-orbital-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: #7c5cfc;
+  animation: se-spin 1s linear infinite;
+}
+@keyframes se-spin {
+  to { transform: rotate(360deg); }
+}
+.se-orbital-core {
+  font-size: 24px; animation: se-pulse 1.5s ease-in-out infinite;
+}
+@keyframes se-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
 .se-progress-bar {
-  height: 6px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 10px;
+  width: 100%; max-width: 320px; height: 4px; background: var(--bg);
+  border-radius: 4px; overflow: hidden;
 }
 .se-progress-fill {
-  height: 100%; background: linear-gradient(90deg, var(--accent), #7c5cfc);
-  border-radius: 4px; transition: width 0.5s ease;
+  height: 100%; border-radius: 4px; transition: width 0.5s ease;
 }
-.se-progress-text { font-size: 13px; color: var(--text-secondary); }
+.se-progress-indeterminate {
+  width: 40%; background: linear-gradient(90deg, var(--accent), #7c5cfc);
+  animation: se-slide 1.6s ease-in-out infinite;
+}
+@keyframes se-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+.se-progress-text {
+  font-size: 14px; color: var(--text-secondary); text-align: center;
+  min-height: 20px;
+}
+
+/* ── Error ── */
+.se-error-section {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 32px 20px; text-align: center;
+  animation: se-fadein 0.4s ease;
+}
+.se-error-icon { font-size: 40px; }
+.se-error-text { font-size: 15px; font-weight: 600; color: #e5484d; }
+.se-error-detail { font-size: 12px; color: var(--text-secondary); max-width: 400px; }
 
 /* ── Launch Button ── */
 .se-btn-launch {

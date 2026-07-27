@@ -27,6 +27,13 @@ const en: Translations = {
     noTasksHint: 'Waiting for WeChat/QQ messages…',
     demoBtn: 'Generate Demo Data',
     demoDone: '{count} demo tasks created',
+    filterCompleted: 'Completed',
+    noCompleted: 'No completed tasks',
+    noCompletedHint: 'Completed tasks will appear here',
+    clearCompleted: 'Clear Completed',
+    confirmClear: 'Delete all completed tasks? This cannot be undone.',
+    taskFrom: 'from {sender}',
+    completedCount: '{count} completed',
   },
 
   taskDetail: {
@@ -102,6 +109,21 @@ const en: Translations = {
     qianwen: 'Qwen',
     doubao: 'Doubao',
     hunyuan: 'Hunyuan',
+  },
+
+  addTask: {
+    title: 'Add Task',
+    taskTitle: 'Task Title',
+    titlePlaceholder: 'Enter task title…',
+    description: 'Description',
+    descPlaceholder: 'Enter task details (optional)…',
+    priority: 'Priority',
+    deadline: 'Deadline',
+    sender: 'Creator',
+    senderPlaceholder: 'Who assigned this? (optional)',
+    defaultSender: 'Me',
+    cancel: 'Cancel',
+    submit: 'Add',
   },
 
   common: {

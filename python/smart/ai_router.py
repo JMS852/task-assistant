@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 import concurrent.futures
 from .adapters.deepseek import DeepSeekProvider
 from .adapters.qianwen import QianwenProvider
 from .adapters.doubao import DoubaoProvider
 from .adapters.hunyuan import HunyuanProvider
 
-PROVIDERS = {}
+PROVIDERS: dict[str, object] = {}
+
+
+def _sanitize(text: str) -> str:
+    """Remove surrogate characters that are invalid in UTF-8."""
+    return text.encode('utf-8', errors='replace').decode('utf-8')
 
 
 def _init_providers():
@@ -18,7 +25,7 @@ def _init_providers():
         }
 
 
-def configure_provider(provider: str, api_key: str = '', endpoint: str = '', enabled: bool = True):
+def configure_provider(provider: str, api_key: str = '', endpoint: str = '', enabled: bool = True) -> dict:
     """接收来自 Electron 主进程的配置，动态注入 API Key"""
     _init_providers()
     p = PROVIDERS.get(provider)
@@ -29,13 +36,14 @@ def configure_provider(provider: str, api_key: str = '', endpoint: str = '', ena
     return {'status': 'error', 'message': f'Unknown provider: {provider}'}
 
 
-def get_available_providers() -> list:
+def get_available_providers() -> list[str]:
     _init_providers()
     return [name for name, p in PROVIDERS.items() if p.is_available()]
 
 
 def call_ai(prompt: str, provider: str = 'deepseek', temperature: float = 0.3) -> str:
     """单次 AI 调用，自动降级"""
+    prompt = _sanitize(prompt)
     _init_providers()
     p = PROVIDERS.get(provider)
     if not p or not p.is_available():
@@ -43,10 +51,10 @@ def call_ai(prompt: str, provider: str = 'deepseek', temperature: float = 0.3) -
         if not available:
             raise RuntimeError('No AI provider available')
         p = PROVIDERS[available[0]]
-    return p.chat(prompt, temperature).content
+    return _sanitize(p.chat(prompt, temperature).content)
 
 
-def call_multiple(prompt: str, providers: list, timeout: float = 120) -> list:
+def call_multiple(prompt: str, providers: list[str], timeout: float = 120) -> list[dict]:
     """并行调用多个 AI，收齐 2 个后再等 90s 熔断其余"""
     _init_providers()
     results = []
@@ -63,7 +71,7 @@ def call_multiple(prompt: str, providers: list, timeout: float = 120) -> list:
             name = futures[future]
             try:
                 resp = future.result()
-                results.append({'provider': name, 'content': resp.content, 'success': True})
+                results.append({'provider': name, 'content': _sanitize(resp.content), 'success': True})
                 done_count += 1
             except Exception as e:
                 results.append({'provider': name, 'content': str(e), 'success': False})
