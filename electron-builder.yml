@@ -6,7 +6,6 @@ files:
   - dist/**/*
   - dist-electron/**/*
   - python/**/*
-  - node_modules/**/*
 extraResources:
   - from: python
     to: python

@@ -2,6 +2,7 @@ import subprocess
 import tempfile
 import os
 import time
+import shutil
 
 DOCKER_IMAGE = 'python:3.12-slim'
 SANDBOX_TIMEOUT = 60
@@ -9,7 +10,7 @@ SANDBOX_MEMORY = '512m'
 SANDBOX_CPUS = '1'
 
 
-def run_in_sandbox(code: str, test_script: str = None, language: str = 'python') -> dict:
+def run_in_sandbox(code: str, test_script: str | None = None, language: str = 'python') -> dict:
     """在 Docker 沙箱中执行代码并返回结果。Docker 不可用时回退到本地子进程。"""
     if not _docker_available():
         return _run_local_subprocess(code, test_script)
@@ -62,6 +63,70 @@ def run_in_sandbox(code: str, test_script: str = None, language: str = 'python')
             return {'success': False, 'error': 'Sandbox timeout', 'duration_s': SANDBOX_TIMEOUT}
         except Exception as e:
             return {'success': False, 'error': str(e)}
+
+
+FILE_EXTENSIONS = {'.docx', '.xlsx', '.pptx', '.pdf', '.txt', '.csv', '.json',
+                   '.html', '.md', '.png', '.jpg', '.jpeg', '.svg', '.gif', '.py'}
+
+
+def run_and_collect_files(code: str, output_dir: str, filename_hint: str = 'output') -> dict:
+    """执行 Python 代码并将生成的文件复制到 output_dir。
+
+    代码在临时目录中执行，执行后所有生成的文件（非 .py 源文件）
+    会被复制到 output_dir。返回生成的文件路径列表。
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    tmpdir = tempfile.mkdtemp()
+
+    try:
+        code_path = os.path.join(tmpdir, 'run.py')
+        with open(code_path, 'w', encoding='utf-8') as f:
+            f.write(code)
+
+        start = time.time()
+        result = subprocess.run(
+            ['python', code_path],
+            capture_output=True, text=True, timeout=SANDBOX_TIMEOUT,
+            cwd=tmpdir,
+        )
+        elapsed = time.time() - start
+
+        # Collect generated files (non-.py files)
+        saved_files = []
+        for root, dirs, files in os.walk(tmpdir):
+            dirs[:] = [d for d in dirs if d != '__pycache__']
+            for fname in files:
+                if fname == 'run.py':
+                    continue
+                src = os.path.join(root, fname)
+                ext = os.path.splitext(fname)[1].lower()
+                if ext in FILE_EXTENSIONS or not ext:
+                    dst = os.path.join(output_dir, fname)
+                    # Avoid overwriting: append number if needed
+                    base, e = os.path.splitext(fname)
+                    # Use timestamp to avoid confusing name collisions (e.g. report_1 → report_1_1)
+                    ts = time.strftime('%Y%m%d_%H%M%S')
+                    dst = os.path.join(output_dir, f"{base}_{ts}{e}")
+                    shutil.copy2(src, dst)
+                    saved_files.append(dst)
+
+        return {
+            'success': result.returncode == 0,
+            'exit_code': result.returncode,
+            'stdout': result.stdout[:5000],
+            'stderr': result.stderr[:5000],
+            'duration_s': round(elapsed, 2),
+            'files': saved_files,
+        }
+    except subprocess.TimeoutExpired:
+        return {'success': False, 'error': 'Execution timeout', 'files': []}
+    except Exception as e:
+        return {'success': False, 'error': str(e), 'files': []}
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except Exception:
+            pass
 
 
 def _docker_available() -> bool:

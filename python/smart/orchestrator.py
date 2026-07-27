@@ -1,9 +1,16 @@
 import json
+import os
+import re
 import time
 import uuid
 from .ai_router import call_ai, call_multiple, get_available_providers
 from .validator import cross_validate
-from .sandbox import run_in_sandbox
+from .sandbox import run_in_sandbox, run_and_collect_files
+
+
+def _safe_json(obj) -> str:
+    """json.dumps with surrogate protection for prompt building."""
+    return json.dumps(obj, ensure_ascii=False).encode('utf-8', errors='replace').decode('utf-8')
 
 OUTPUT_SCHEMA = """{
   "answer": "你的最终答案",
@@ -37,19 +44,106 @@ def classify_level(task: dict) -> str:
     return 'L1'
 
 
-def get_reference_models(level: str) -> list:
+def get_reference_models(level: str) -> list[str]:
     """根据级别获取参考 AI 列表"""
     available = get_available_providers()
+    if not available:
+        return []
     if level == 'L1':
-        return [available[0]] if available else ['deepseek']
+        return [available[0]]
     elif level == 'L2':
         return available[:2] if len(available) >= 2 else available
     else:
         return available[:3] if len(available) >= 3 else available
 
 
-def execute(task_data: dict, user_level: str = None) -> dict:
+def _clean_str(s: str) -> str:
+    """Remove surrogates that break UTF-8 encoding."""
+    if isinstance(s, str):
+        return s.encode('utf-8', errors='replace').decode('utf-8')
+    return s
+
+
+def _clean_dict(d: dict) -> dict:
+    """Recursively clean all string values in a dict."""
+    if isinstance(d, dict):
+        return {k: _clean_dict(v) for k, v in d.items()}
+    if isinstance(d, list):
+        return [_clean_dict(v) for v in d]
+    if isinstance(d, str):
+        return _clean_str(d)
+    return d
+
+
+def _extract_json(text: str) -> dict | None:
+    """Extract a JSON object from AI response text that may have markdown or prose.
+
+    Tries in order:
+    1. Direct parse
+    2. ```json code fence extraction
+    3. First { ... } block via regex
+    4. Give up → return None
+    """
+    if not text:
+        return None
+    # 1. Direct parse
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    # 2. Extract from ```json ... ``` fence
+    m = re.search(r'```(?:json)?\s*\n?(.*?)```', text, re.DOTALL)
+    if m:
+        try:
+            return json.loads(m.group(1).strip())
+        except (json.JSONDecodeError, TypeError):
+            pass
+    # 3. Find first balanced { ... } block
+    # Use a simple brace-counting approach for reliability
+    start = text.find('{')
+    if start != -1:
+        depth = 0
+        for i in range(start, len(text)):
+            if text[i] == '{':
+                depth += 1
+            elif text[i] == '}':
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:i + 1])
+                    except (json.JSONDecodeError, TypeError):
+                        break
+    return None
+
+
+def _extract_executable_code(content: str) -> str | None:
+    """Extract executable Python code from AI response content.
+
+    Tries JSON parsing first (executable.content field), then falls back
+    to markdown code fence extraction.
+    """
+    if not content:
+        return None
+    try:
+        data = json.loads(content) if isinstance(content, str) else content
+        exec_field = data.get('executable', {})
+        if isinstance(exec_field, dict) and exec_field.get('content'):
+            return exec_field['content']
+    except (json.JSONDecodeError, AttributeError):
+        pass
+
+    # Fallback: extract ```python blocks from markdown
+    pattern = r'```(?:python)?\s*\n(.*?)```'
+    matches = re.findall(pattern, content, re.DOTALL)
+    if matches:
+        return '\n\n'.join(matches)
+
+    return None
+
+
+def execute(task_data: dict, user_level: str | None = None) -> dict:
     """智能模式主编排器。流程：分析定级 → 分解 → 并行执行 → 验证 → 综合"""
+    task_data = _clean_dict(task_data)
     execution_id = str(uuid.uuid4())
     level = user_level or classify_level(task_data)
     ref_models = get_reference_models(level)
@@ -75,9 +169,8 @@ def execute(task_data: dict, user_level: str = None) -> dict:
 """
 
     main_result = call_ai(main_prompt, provider='deepseek', temperature=0.2)
-    try:
-        plan = json.loads(main_result) if isinstance(main_result, str) else main_result
-    except json.JSONDecodeError:
+    plan = _extract_json(main_result) if isinstance(main_result, str) else (main_result or {})
+    if not plan:
         plan = {'task_type': 'other', 'subtasks': [task_data.get('description', '')], 'validation_script': None}
 
     task_type = plan.get('task_type', 'other')
@@ -86,7 +179,7 @@ def execute(task_data: dict, user_level: str = None) -> dict:
 
 任务：{task_data.get('title', '')}
 描述：{task_data.get('description', '')}
-子任务：{json.dumps(plan.get('subtasks', []), ensure_ascii=False)}
+子任务：{_safe_json(plan.get('subtasks', []))}
 
 必须按以下 JSON Schema 输出：
 {OUTPUT_SCHEMA}"""
@@ -109,7 +202,8 @@ def execute(task_data: dict, user_level: str = None) -> dict:
                             language=executable.get('language', 'python')
                         )
                         sandbox_results.append({**r, 'sandbox': exec_result})
-                except Exception:
+                except Exception as sandbox_err:
+                    print(f'[Orchestrator] Sandbox execution failed: {sandbox_err}', flush=True)
                     sandbox_results.append(r)
             else:
                 sandbox_results.append(r)
@@ -117,13 +211,28 @@ def execute(task_data: dict, user_level: str = None) -> dict:
     else:
         ref_results = cross_validate(ref_results, task_data)
 
+    # ── 文件生成：提取可执行代码并实际运行，将生成的文件保存到桌面 ──
+    output_dir = os.path.join(os.path.expanduser('~'), 'Desktop', 'task-assistant-output')
+    generated_files = []
+    code_blocks_seen = set()
+
+    for r in ref_results:
+        if not r.get('success'):
+            continue
+        code = _extract_executable_code(r.get('content', ''))
+        if code and code not in code_blocks_seen:
+            code_blocks_seen.add(code)
+            file_result = run_and_collect_files(code, output_dir)
+            if file_result.get('files'):
+                generated_files.extend(file_result['files'])
+
     # 主 AI 综合
     synthesis_prompt = f"""综合以下多个 AI 的执行结果，给出最终输出。
 
 原始任务：{task_data.get('title', '')}
 
 各 AI 输出：
-{json.dumps([{'provider': r['provider'], 'content': r.get('content', '')[:2000], 'sandbox': r.get('sandbox', None)} for r in ref_results], ensure_ascii=False, indent=2)}
+{_safe_json([{'provider': r['provider'], 'content': r.get('content', '')[:2000], 'sandbox': r.get('sandbox', None)} for r in ref_results])}
 
 请：
 1. 如果有沙箱执行结果，以沙箱结果为准
@@ -145,4 +254,6 @@ def execute(task_data: dict, user_level: str = None) -> dict:
         'final_result': final_result,
         'duration_ms': duration_ms,
         'status': 'completed',
+        'generated_files': generated_files,
+        'output_dir': output_dir,
     }

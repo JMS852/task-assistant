@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 EXTRACTION_PROMPT = """从以下聊天任务消息中提取结构化信息。
 
@@ -17,7 +17,7 @@ EXTRACTION_PROMPT = """从以下聊天任务消息中提取结构化信息。
 }}"""
 
 
-def extract_task_info(content: str, context: list = None) -> dict:
+def extract_task_info(content: str, context: list | None = None) -> dict:
     """从任务消息中提取结构化待办信息"""
     priority = 'medium'
     deadline = None
@@ -39,7 +39,7 @@ def extract_task_info(content: str, context: list = None) -> dict:
     date_patterns = [
         (r'(\d{4}-\d{2}-\d{2})', 1),
         (r'(今天)', lambda: datetime.now().strftime('%Y-%m-%d')),
-        (r'(明天)', lambda: (datetime.now().replace(day=datetime.now().day + 1)).strftime('%Y-%m-%d')),
+        (r'(明天)', lambda: (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')),
     ]
     for pattern, replacement in date_patterns:
         match = re.search(pattern, content)
@@ -50,7 +50,7 @@ def extract_task_info(content: str, context: list = None) -> dict:
                 deadline = match.group(replacement)
             break
 
-    sentences = content.replace('！', '。').replace('!', '。').replace('?', '。').split('。')
+    sentences = content.replace('！', '。').replace('!', '。').replace('?', '。').replace('？', '。').replace('；', '。').replace('\n', '。').split('。')
     title = ''
     for s in sentences:
         s = s.strip()

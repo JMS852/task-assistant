@@ -23,14 +23,6 @@ const defaultProviders: ProviderConfig[] = [
   { provider: 'hunyuan', displayName: '混元', icon: '🌐', envVar: 'HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY', endpoint: 'https://hunyuan.tencentcloudapi.com', enabled: false, apiKey: '' },
 ];
 
-declare global {
-  interface Window {
-    electronAPI?: {
-      saveSettings: (settings: any[]) => Promise<any>;
-    };
-  }
-}
-
 export function Settings({ onBack }: Props) {
   const { t, lang, setLang } = useI18n();
   const [providers, setProviders] = useState<ProviderConfig[]>(defaultProviders);
@@ -38,16 +30,38 @@ export function Settings({ onBack }: Props) {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const stored = localStorage.getItem('ai_providers');
-    if (stored) {
+    // Load providers: prefer IPC (from SQLite DB), fall back to localStorage (migration)
+    const loadProviders = async () => {
       try {
-        const parsed = JSON.parse(stored);
-        setProviders(defaultProviders.map(dp => {
-          const existing = parsed.find((p: ProviderConfig) => p.provider === dp.provider);
-          return existing ? { ...dp, ...existing, apiKey: existing.apiKey || '' } : dp;
-        }));
+        if (window.electronAPI?.getSettings) {
+          const dbSettings = await window.electronAPI.getSettings();
+          if (dbSettings && dbSettings.length > 0) {
+            setProviders(defaultProviders.map(dp => {
+              const existing = dbSettings.find((s: any) => s.provider === dp.provider);
+              if (existing) {
+                return { ...dp, enabled: existing.enabled === 1 || existing.enabled === true, apiKey: existing.api_key_encrypted || '' };
+              }
+              return dp;
+            }));
+            // Migration successful — clear stale localStorage copy
+            localStorage.removeItem('ai_providers');
+            return;
+          }
+        }
       } catch {}
-    }
+      // Fallback: load from localStorage (legacy migration path)
+      const stored = localStorage.getItem('ai_providers');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setProviders(defaultProviders.map(dp => {
+            const existing = parsed.find((p: any) => p.provider === dp.provider);
+            return existing ? { ...dp, ...existing, apiKey: existing.apiKey || '' } : dp;
+          }));
+        } catch {}
+      }
+    };
+    loadProviders();
   }, []);
 
   const toggleProvider = (idx: number) => {
@@ -71,7 +85,6 @@ export function Settings({ onBack }: Props) {
   };
 
   const saveSettings = () => {
-    localStorage.setItem('ai_providers', JSON.stringify(providers));
     if (window.electronAPI?.saveSettings) {
       window.electronAPI.saveSettings(providers.map(p => ({
         id: p.provider,
