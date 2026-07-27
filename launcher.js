@@ -30,7 +30,22 @@ function killPort(port) {
 killPort(5173);
 killPort(3001);
 
-// Start Vite dev server on port 5173
+// Step 1: Compile Electron TypeScript to dist-electron/
+console.log('[Launcher] Compiling Electron TypeScript...');
+try {
+  execSync('npx tsc -p tsconfig.electron.json', {
+    cwd: __dirname,
+    shell: true,
+    stdio: 'inherit',
+    timeout: 30000,
+  });
+  console.log('[Launcher] Electron TS compiled successfully.');
+} catch (e) {
+  console.error('[Launcher] Electron TS compilation failed!');
+  process.exit(1);
+}
+
+// Step 2: Start Vite dev server on port 5173
 const vite = spawn('npx', ['vite', '--port', '5173', '--strictPort'], {
   cwd: __dirname,
   shell: true,
