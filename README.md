@@ -10,24 +10,6 @@ Windows 桌面任务助手。开着微信/QQ 聊天的时候，自动帮你抓�
 
 内置了智能执行功能，能自动写代码、生成报告文件、分析数据——把任务从"识别"到"执行"一条龙处理。
 
-## 截图
-
-![主界面概览](screenshots/overview.png)
-
-![任务列表](screenshots/task-list.png)
-
-![智能执行](screenshots/smart-execute.png)
-
-![新建任务](screenshots/create-task.png)
-
-![演示任务](screenshots/demo-tasks.png)
-
-![历史扫描](screenshots/history-scan.png)
-
-![托盘菜单](screenshots/tray-menu.png)
-
-![设置页面](screenshots/settings.png)
-
 ## 能做什么
 
 - 监听微信/QQ 消息和通知弹窗，自动识别是不是有人在给你派任务
