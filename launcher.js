@@ -62,6 +62,7 @@ function startElectron() {
     cwd: __dirname,
     stdio: 'ignore',
     detached: true,
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
   });
   electron.unref();
 }
