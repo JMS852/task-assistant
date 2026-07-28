@@ -11,24 +11,32 @@ export function useApi() {
       body: JSON.stringify({ status }),
     }).then(r => r.json());
 
-  const executeTask = async (taskId: string, level: string): Promise<any> => {
-    try {
-      // Always use REST endpoint (bypasses IPC for reliability)
-      const r = await fetch(`${API_BASE}/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_id: taskId, level }),
-      });
-      const json = await r.json();
-      if (json?.error)  {
-        const msg = typeof json.error === 'string' ? json.error : JSON.stringify(json.error);
-        throw new Error(msg);
-      }
-      return json;
-    } catch (e) {
-      console.error('[useApi] executeTask error:', e);
-      throw e;
+  const enhanceTask = async (taskId: string): Promise<any> => {
+    if (window.electronAPI?.enhanceTask) {
+      return window.electronAPI.enhanceTask(taskId);
     }
+    const r = await fetch(`${API_BASE}/tasks/${taskId}/enhance`, { method: 'POST' });
+    return r.json();
+  };
+
+  const askQuery = async (question: string): Promise<any> => {
+    if (window.electronAPI?.askQuery) {
+      return window.electronAPI.askQuery(question);
+    }
+    const r = await fetch(`${API_BASE}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+    return r.json();
+  };
+
+  const getBriefing = async (): Promise<any> => {
+    if (window.electronAPI?.getBriefing) {
+      return window.electronAPI.getBriefing();
+    }
+    const r = await fetch(`${API_BASE}/briefing`);
+    return r.json();
   };
 
   const ping = () =>
@@ -94,5 +102,5 @@ export function useApi() {
     return { success: false, error: 'scanHistory only available in Electron' };
   };
 
-  return { fetchTasks, updateTaskStatus, executeTask, ping, createDemoTasks, fetchCompletedTasks, deleteCompletedTasks, createTask, scanHistory };
+  return { fetchTasks, updateTaskStatus, enhanceTask, askQuery, getBriefing, ping, createDemoTasks, fetchCompletedTasks, deleteCompletedTasks, createTask, scanHistory };
 }

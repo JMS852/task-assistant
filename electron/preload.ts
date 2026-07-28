@@ -4,7 +4,9 @@ import type { CreateTaskInput, AIConfig } from './types';
 contextBridge.exposeInMainWorld('electronAPI', {
   getTasks: () => ipcRenderer.invoke('get-tasks'),
   updateTaskStatus: (id: string, status: string) => ipcRenderer.invoke('update-task-status', id, status),
-  executeTask: (taskId: string, level: string) => ipcRenderer.invoke('execute-task', taskId, level),
+  enhanceTask: (taskId: string) => ipcRenderer.invoke('enhance-task', taskId),
+  askQuery: (question: string) => ipcRenderer.invoke('query-tasks', question),
+  getBriefing: () => ipcRenderer.invoke('get-briefing'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings: AIConfig[]) => ipcRenderer.invoke('save-settings', settings),
   createTask: (data: CreateTaskInput) => ipcRenderer.invoke('create-task', data),
@@ -44,5 +46,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const events = ['history_scan_started', 'history_scan_progress', 'history_scan_collected', 'history_scan_complete', 'history_scan_log'];
     events.forEach(ev => ipcRenderer.on(ev, (_, data) => cb(ev, data)));
     return () => events.forEach(ev => ipcRenderer.removeAllListeners(ev));
+  },
+  onTriggerBriefing: (cb: () => void) => {
+    ipcRenderer.on('trigger-briefing', () => cb());
+    return () => ipcRenderer.removeAllListeners('trigger-briefing');
   },
 });

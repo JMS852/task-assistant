@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTasks } from './hooks/useTasks';
+import { useApi } from './hooks/useApi';
 import { TaskList } from './components/TaskList';
 import { TaskDetail } from './components/TaskDetail';
 import { Settings } from './components/Settings';
-import { SmartExecute } from './components/SmartExecute';
 import { HistoryScan } from './components/HistoryScan';
+import { ChatPanel } from './components/ChatPanel';
+import { DailyBriefing } from './components/DailyBriefing';
 import { Task } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useI18n, format } from './i18n';
@@ -14,10 +16,38 @@ export default function App() {
   const { tasks, completedTasks, loading, monitorActive, statusTooltip, capturedMsgs, completeTask, refresh, demo, refreshCompleted, clearCompleted, addTask, toggleMonitor } = useTasks();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [executingTask, setExecutingTask] = useState<Task | null>(null);
   const [showHistoryScan, setShowHistoryScan] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
+  const [briefing, setBriefing] = useState<any>(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
   const [historyScanning, setHistoryScanning] = useState(false);
   const [historyScanMsg, setHistoryScanMsg] = useState('');
+
+  const api = useApi();
+
+  const refreshBriefing = useCallback(async () => {
+    setBriefingLoading(true);
+    try {
+      const b = await api.getBriefing();
+      setBriefing(b);
+    } catch (e) {
+      console.error('Briefing fetch failed:', e);
+    } finally {
+      setBriefingLoading(false);
+    }
+  }, [api]);
+
+  // Load briefing on mount
+  useEffect(() => { refreshBriefing(); }, [refreshBriefing]);
+
+  // Listen for 9am trigger from Electron
+  useEffect(() => {
+    if (!window.electronAPI?.onTriggerBriefing) return;
+    const unsub = window.electronAPI.onTriggerBriefing(() => {
+      refreshBriefing();
+    });
+    return () => { if (unsub) unsub(); };
+  }, [refreshBriefing]);
 
   const activeCount = tasks.filter(t => t.status !== 'completed').length;
 
@@ -79,6 +109,7 @@ export default function App() {
 
       <div className="app-body">
         <div className="panel-left">
+          <DailyBriefing data={briefing} loading={briefingLoading} onRefresh={refreshBriefing} />
           <TaskList
             tasks={tasks}
             completedTasks={completedTasks}
@@ -101,19 +132,11 @@ export default function App() {
           <ErrorBoundary>
             {showHistoryScan ? (
             <HistoryScan onClose={() => setShowHistoryScan(false)} />
-          ) : executingTask ? (
-            <SmartExecute
-              key={executingTask.id}
-              taskId={executingTask.id}
-              taskTitle={executingTask.title}
-              onClose={() => setExecutingTask(null)}
-            />
           ) : selectedTask ? (
             <TaskDetail
               key={selectedTask.id}
               task={selectedTask}
               onComplete={(id) => { completeTask(id); setSelectedTask(null); }}
-              onExecute={() => { console.log('[App] onExecute clicked, selectedTask:', selectedTask?.title); if (selectedTask) setExecutingTask(selectedTask); }}
             />
           ) : (
             <div className="empty-state">
@@ -125,6 +148,14 @@ export default function App() {
           </ErrorBoundary>
         </div>
       </div>
+      <ChatPanel
+        visible={chatVisible}
+        onToggle={() => setChatVisible(!chatVisible)}
+        onSelectTask={(id) => {
+          const task = tasks.find(t => t.id === id);
+          if (task) { setSelectedTask(task); setChatVisible(false); }
+        }}
+      />
     </div>
   );
 }

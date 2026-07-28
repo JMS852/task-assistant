@@ -5,7 +5,28 @@ const zh = {
     settings: '设置',
     emptyTitle: '选择一个任务',
     emptyDesc: '从左侧列表中选择任务查看详情',
-    emptyHint: '或点击"智能执行"让 AI 帮你完成',
+    emptyHint: '或使用 AI 助手帮你分析和查询任务',
+  },
+
+  chat: {
+    title: 'AI 助手',
+    placeholder: '问点什么... (Enter 发送)',
+    greeting: '你好！我是任务助手，你可以问我任何关于待办事项的问题。\n\n例如："有哪些高优先级的任务"、"张经理派的活"、"今天到期的"、"SSL证书的截止时间是什么"',
+    thinking: '思考中...',
+    viewTask: '查看任务 →',
+    fail: '查询失败',
+  },
+
+  briefing: {
+    title: '今日简报',
+    generating: '正在生成简报...',
+    topPriority: '优先处理',
+    expiringSoon: '即将过期',
+    recentlyDone: '最近完成',
+    aiAdvice: 'AI 建议',
+    statsPending: '待办',
+    statsHigh: '紧急',
+    statsToday: '今日到期',
   },
 
   taskList: {
@@ -50,30 +71,8 @@ const zh = {
     contextMissing: '上下文不完整',
     contextMissingHint: '无法获取完整的消息上下文，可能影响 AI 执行效果',
     completeContext: '补全',
-    smartExecute: '智能执行',
+    aiAnalyze: 'AI 分析',
     markComplete: '标记完成',
-  },
-
-  smartExecute: {
-    title: '🤖 智能执行',
-    targetTask: '目标任务',
-    levelL1Name: '快速模式',
-    levelL1Desc: '仅主 AI · 30s 超时',
-    levelL2Name: '标准模式',
-    levelL2Desc: '2 个参考 AI · 120s 超时',
-    levelL3Name: '深度模式',
-    levelL3Desc: '3 个参考 AI + 沙箱验证 · 180s 超时',
-    progress0: '正在分析任务需求…',
-    progress1: '分解子任务并分派 AI…',
-    progress2: '各 AI 模型并行执行中…',
-    progress3: '验证结果一致性…',
-    progress4: '主 AI 综合最终答案…',
-    done: '执行完成',
-    failed: '执行失败: ',
-    startBtn: '开始执行',
-    completed: '✅ 已完成',
-    failedBadge: '❌ 失败',
-    aiPassed: '{passed}/{total} AI 通过',
   },
 
   settings: {

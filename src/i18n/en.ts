@@ -7,7 +7,28 @@ const en: Translations = {
     settings: 'Settings',
     emptyTitle: 'Select a Task',
     emptyDesc: 'Choose a task from the left panel to view details',
-    emptyHint: 'or click "Smart Execute" to let AI handle it',
+    emptyHint: 'or use the AI assistant to analyze and query tasks',
+  },
+
+  chat: {
+    title: 'AI Assistant',
+    placeholder: 'Ask something... (Enter to send)',
+    greeting: 'Hi! I\'m your task assistant. Ask me anything about your tasks.\n\nExamples: "What are the high priority tasks?", "Tasks from John", "Due today", "When is the SSL cert deadline?"',
+    thinking: 'Thinking...',
+    viewTask: 'View task →',
+    fail: 'Query failed',
+  },
+
+  briefing: {
+    title: 'Daily Briefing',
+    generating: 'Generating briefing...',
+    topPriority: 'Top Priority',
+    expiringSoon: 'Expiring Soon',
+    recentlyDone: 'Recently Done',
+    aiAdvice: 'AI Advice',
+    statsPending: 'Pending',
+    statsHigh: 'Urgent',
+    statsToday: 'Due Today',
   },
 
   taskList: {
@@ -52,30 +73,8 @@ const en: Translations = {
     contextMissing: 'Incomplete Context',
     contextMissingHint: 'Unable to get full message context, may affect AI execution quality',
     completeContext: 'Complete',
-    smartExecute: 'Smart Execute',
+    aiAnalyze: 'AI Analyze',
     markComplete: 'Mark Complete',
-  },
-
-  smartExecute: {
-    title: '🤖 Smart Execute',
-    targetTask: 'Target Task',
-    levelL1Name: 'Quick Mode',
-    levelL1Desc: 'Main AI only · 30s timeout',
-    levelL2Name: 'Standard Mode',
-    levelL2Desc: '2 reference AIs · 120s timeout',
-    levelL3Name: 'Deep Mode',
-    levelL3Desc: '3 reference AIs + sandbox · 180s timeout',
-    progress0: 'Analyzing task requirements…',
-    progress1: 'Breaking down subtasks and dispatching AI…',
-    progress2: 'AI models executing in parallel…',
-    progress3: 'Verifying result consistency…',
-    progress4: 'Main AI synthesizing final answer…',
-    done: 'Execution complete',
-    failed: 'Execution failed: ',
-    startBtn: 'Start Execution',
-    completed: '✅ Completed',
-    failedBadge: '❌ Failed',
-    aiPassed: '{passed}/{total} AI passed',
   },
 
   settings: {

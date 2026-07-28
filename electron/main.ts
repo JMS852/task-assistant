@@ -165,14 +165,47 @@ ipcMain.handle('update-task-status', (_e, id: string, status: string) => {
   return { success: true };
 });
 
-ipcMain.handle('execute-task', async (_e, taskId: string, level: string) => {
+ipcMain.handle('enhance-task', async (_e, taskId: string) => {
   const task = queryOne('SELECT * FROM tasks WHERE id = ?', [taskId]);
   if (!task) return { error: 'Task not found' };
+  const allTasks = queryAll('SELECT id, title, priority, status, sender FROM tasks');
   try {
-    const result = await sendToPythonAndWait({ action: 'execute_task', data: { ...task, level } });
+    const result = await sendToPythonAndWait({
+      action: 'enhance_task',
+      data: { task, all_tasks: allTasks },
+    }, 30000);
     return result;
   } catch (err) {
-    console.error('[Main] execute-task failed:', err);
+    console.error('[Main] enhance-task failed:', err);
+    return { error: String(err) };
+  }
+});
+
+ipcMain.handle('query-tasks', async (_e, question: string) => {
+  const tasks = queryAll('SELECT * FROM tasks');
+  try {
+    const result = await sendToPythonAndWait({
+      action: 'query',
+      data: { question, tasks },
+    }, 30000);
+    return result;
+  } catch (err) {
+    console.error('[Main] query failed:', err);
+    return { error: String(err) };
+  }
+});
+
+ipcMain.handle('get-briefing', async () => {
+  const tasks = queryAll("SELECT * FROM tasks WHERE status != 'completed'");
+  const completedTasks = queryAll("SELECT * FROM tasks WHERE status = 'completed' ORDER BY updated_at DESC LIMIT 20");
+  try {
+    const result = await sendToPythonAndWait({
+      action: 'generate_briefing',
+      data: { tasks, completed_tasks: completedTasks },
+    }, 30000);
+    return result;
+  } catch (err) {
+    console.error('[Main] briefing failed:', err);
     return { error: String(err) };
   }
 });
@@ -314,6 +347,22 @@ app.whenReady().then(async () => {
 
   createWindow();
   createTray();
+
+  // Schedule daily briefing notification at 9:00 AM
+  function scheduleDailyBriefing() {
+    const now = new Date();
+    const nineAM = new Date(now);
+    nineAM.setHours(9, 0, 0, 0);
+    if (now > nineAM) nineAM.setDate(nineAM.getDate() + 1);
+    const msUntilNine = nineAM.getTime() - now.getTime();
+    setTimeout(() => {
+      if (mainWindow) {
+        mainWindow.webContents.send('trigger-briefing');
+      }
+      scheduleDailyBriefing();
+    }, msUntilNine);
+  }
+  scheduleDailyBriefing();
 });
 
 app.on('before-quit', () => {

@@ -5,7 +5,9 @@ declare global {
     electronAPI?: {
       getTasks: () => Promise<any[]>;
       updateTaskStatus: (id: string, status: string) => Promise<{ success: boolean }>;
-      executeTask: (taskId: string, level: string) => Promise<{ success: boolean; status?: string; error?: string }>;
+      enhanceTask: (taskId: string) => Promise<{ background?: string; subtasks?: string[]; priority_suggestion?: string; priority_reason?: string; related_task_ids?: string[]; suggested_deadline?: string | null; notes?: string; error?: string }>;
+      askQuery: (question: string) => Promise<{ answer?: string; relevant_task_ids?: string[]; suggestion?: string; error?: string }>;
+      getBriefing: () => Promise<{ date?: string; top_priorities?: any[]; recently_completed?: any[]; expiring_soon?: any[]; stats?: any; ai_advice?: string; error?: string }>;
       getSettings: () => Promise<any[]>;
       saveSettings: (settings: any[]) => Promise<{ success: boolean }>;
       createTask: (data: any) => Promise<any>;
@@ -24,6 +26,7 @@ declare global {
       scanHistory: (maxDays?: number) => Promise<{ success: boolean; error?: string }>;
       onHistoryScanEvent: (cb: (event: string, data: any) => void) => (() => void) | void;
       testMessage: (content: string, sender?: string) => Promise<{ success: boolean }>;
+      onTriggerBriefing: (cb: () => void) => (() => void) | void;
     };
   }
 }

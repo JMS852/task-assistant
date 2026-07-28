@@ -48,17 +48,49 @@ taskRoutes.post('/tasks', (req, res) => {
   res.status(201).json(task);
 });
 
-// Execute task via Python backend
-taskRoutes.post('/execute', async (req, res) => {
-  const { task_id, level } = req.body;
-  if (!task_id) return res.status(400).json({ error: 'task_id required' });
-  const task = queryOne('SELECT * FROM tasks WHERE id = ?', [task_id]);
-  if (!task) return res.status(404).json({ error: 'Task not found' });
+// Task enhancement
+taskRoutes.post('/tasks/:id/enhance', async (req, res) => {
+  const task = queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+  if (!task) return res.status(404).json({ error: 'Not found' });
+  const allTasks = queryAll('SELECT id, title, priority, status, sender FROM tasks');
   try {
-    const result = await sendToPythonAndWait({ action: 'execute_task', data: { ...task, level: level || 'L2' } });
+    const result = await sendToPythonAndWait({
+      action: 'enhance_task',
+      data: { task, all_tasks: allTasks },
+    }, 30000);
     res.json(result);
   } catch (err: any) {
-    console.error('[API] /execute error:', err);
+    res.status(500).json({ error: err?.message || String(err) });
+  }
+});
+
+// Smart query
+taskRoutes.post('/query', async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ error: 'question required' });
+  const tasks = queryAll('SELECT * FROM tasks');
+  try {
+    const result = await sendToPythonAndWait({
+      action: 'query',
+      data: { question, tasks },
+    }, 30000);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || String(err) });
+  }
+});
+
+// Daily briefing
+taskRoutes.get('/briefing', async (_req, res) => {
+  const tasks = queryAll("SELECT * FROM tasks WHERE status != 'completed'");
+  const completedTasks = queryAll("SELECT * FROM tasks WHERE status = 'completed' ORDER BY updated_at DESC LIMIT 20");
+  try {
+    const result = await sendToPythonAndWait({
+      action: 'generate_briefing',
+      data: { tasks, completed_tasks: completedTasks },
+    }, 30000);
+    res.json(result);
+  } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
   }
 });

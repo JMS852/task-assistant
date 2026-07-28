@@ -214,15 +214,6 @@ def main():
                 from engine.recognizer import recognize_task
                 result = recognize_task(cmd['data'])
                 safe_print(result)
-            elif action == 'execute_task':
-                from smart.orchestrator import execute
-                import traceback
-                try:
-                    result = execute(cmd['data'])
-                    safe_print({'event': 'task_executed', 'data': result, '_requestId': cmd.get('_requestId')})
-                except Exception as e:
-                    tb = traceback.format_exc()
-                    safe_print({'event': 'error', 'data': f'{e}\n\n{tb[-1000:]}', '_requestId': cmd.get('_requestId')})
             elif action == 'configure_provider':
                 from smart.ai_router import configure_provider
                 data = cmd['data']
@@ -233,6 +224,30 @@ def main():
                     enabled=data.get('enabled', True),
                 )
                 safe_print(result)
+            elif action == 'enhance_task':
+                from engine.enhancer import enhance_task
+                data = cmd['data']
+                result = enhance_task(
+                    task=data.get('task', {}),
+                    all_tasks=data.get('all_tasks', []),
+                )
+                safe_print({'event': 'task_enhanced', 'data': result, '_requestId': cmd.get('_requestId')})
+            elif action == 'query':
+                from smart.query_engine import answer_query
+                data = cmd['data']
+                result = answer_query(
+                    question=data.get('question', ''),
+                    tasks=data.get('tasks', []),
+                )
+                safe_print({'event': 'query_result', 'data': result, '_requestId': cmd.get('_requestId')})
+            elif action == 'generate_briefing':
+                from smart.briefer import generate_briefing
+                data = cmd['data']
+                result = generate_briefing(
+                    tasks=data.get('tasks', []),
+                    completed_tasks=data.get('completed_tasks', []),
+                )
+                safe_print({'event': 'briefing_result', 'data': result, '_requestId': cmd.get('_requestId')})
             elif action == 'scan_history':
                 safe_print({'event': 'log', 'data': f'Received scan_history action, max_days={cmd.get("max_days", 7)}'})
                 threading.Thread(
