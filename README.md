@@ -12,13 +12,21 @@ Windows 桌面任务助手。开着微信/QQ 聊天的时候，自动帮你抓�
 
 ## 截图
 
-截几张图放在 `screenshots/` 目录下，取消下面注释就行。
+![主界面概览](screenshots/overview.png)
 
-<!--
 ![任务列表](screenshots/task-list.png)
+
 ![智能执行](screenshots/smart-execute.png)
+
+![新建任务](screenshots/create-task.png)
+
+![演示任务](screenshots/demo-tasks.png)
+
 ![历史扫描](screenshots/history-scan.png)
--->
+
+![托盘菜单](screenshots/tray-menu.png)
+
+![设置页面](screenshots/settings.png)
 
 ## 能做什么
 
