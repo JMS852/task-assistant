@@ -136,7 +136,7 @@ function handleNewTaskFromPython(task: Task) {
 function onPythonReady() {
   pythonReady = true;
   // Push saved API keys
-  const rows = queryAll('SELECT * FROM ai_config WHERE enabled = 1');
+  const rows = queryAll<AIConfig>('SELECT * FROM ai_config WHERE enabled = 1');
   for (const row of rows) pushConfigToPython(row);
   // Auto-start collector
   startCollector();
@@ -233,7 +233,7 @@ ipcMain.handle('create-demo-tasks', () => {
     { title: '整理客户需求文档', description: '把上次会议讨论的功能点整理成 PRD，按优先级排序，标注技术可行性。周三前给出初稿。', priority: 'medium', source: 'demo', sender: '产品-赵姐', deadline: new Date(Date.now() + 172800000).toISOString().slice(0, 10), confidence: 0.88, context_missing: 1 },
   ];
 
-  const count = queryOne('SELECT COUNT(*) as c FROM tasks WHERE source = ?', ['demo']);
+  const count = queryOne<{c: number}>('SELECT COUNT(*) as c FROM tasks WHERE source = ?', ['demo']);
   if (count && count.c > 0) return { success: false, message: 'Demo tasks already exist' };
 
   for (const d of demos) {

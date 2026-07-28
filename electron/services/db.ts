@@ -150,7 +150,7 @@ export function getDb(): SqlJsDatabase {
   return db;
 }
 
-export function queryAll<T = Record<string, unknown>>(sql: string, params: unknown[] = []): T[] {
+export function queryAll<T = Record<string, unknown>>(sql: string, params: (string | number | null)[] = []): T[] {
   const stmt = db.prepare(sql);
   if (params.length > 0) stmt.bind(params);
   const rows: T[] = [];
@@ -161,12 +161,12 @@ export function queryAll<T = Record<string, unknown>>(sql: string, params: unkno
   return rows;
 }
 
-export function queryOne<T = Record<string, unknown>>(sql: string, params: unknown[] = []): T | null {
+export function queryOne<T = Record<string, unknown>>(sql: string, params: (string | number | null)[] = []): T | null {
   const rows = queryAll<T>(sql, params);
   return rows.length > 0 ? rows[0] : null;
 }
 
-export function execute(sql: string, params: unknown[] = []): void {
+export function execute(sql: string, params: (string | number | null)[] = []): void {
   db.run(sql, params);
   saveDb();
 }
